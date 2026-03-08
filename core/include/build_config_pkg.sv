@@ -33,6 +33,7 @@ package build_config_pkg;
 
     cfg.XLEN = CVA6Cfg.XLEN;
     cfg.VLEN = CVA6Cfg.VLEN;
+  
     cfg.PLEN = (CVA6Cfg.XLEN == 32) ? 34 : 56;
     cfg.GPLEN = (CVA6Cfg.XLEN == 32) ? 34 : 41;
     cfg.IS_XLEN32 = IS_XLEN32;
@@ -107,6 +108,8 @@ package build_config_pkg;
     cfg.ExceptionAddress = CVA6Cfg.ExceptionAddress;
     cfg.RASDepth = CVA6Cfg.RASDepth;
     cfg.BTBEntries = CVA6Cfg.BTBEntries;
+
+
     cfg.BPType = CVA6Cfg.BPType;
     cfg.BHTEntries = CVA6Cfg.BHTEntries;
     cfg.BHTHist = CVA6Cfg.BHTHist;
@@ -200,6 +203,32 @@ package build_config_pkg;
     cfg.X_DUALREAD = 0;
     cfg.X_DUALWRITE = 0;
     cfg.X_ISSUE_REGISTER_SPLIT = 0;
+
+
+
+    // GSHARE PREDICTOR
+    cfg.GShareEn              = CVA6Cfg.GShareEn;
+    cfg.GshareNrEntires       = CVA6Cfg.GshareNrEntires;
+    cfg.GSHAREWIDTH = $clog2(CVA6Cfg.GshareNrEntires / cfg.INSTR_PER_FETCH);
+
+    // TAGE PREDICTOR
+    cfg.TageEn                = CVA6Cfg.TageEn;
+    cfg.GHRWIDTH              = CVA6Cfg.GHRWIDTH;
+    cfg.TageTableWidth        = CVA6Cfg.TageTableWidth;
+    cfg.BranchTidWidth        = CVA6Cfg.BranchTidWidth;
+    cfg.OneTageNrEntries      = CVA6Cfg.OneTageNrEntries;
+    cfg.BaseTageNrEntries     = CVA6Cfg.BaseTageNrEntries;
+    cfg.TwoTageNrEntries      = CVA6Cfg.TwoTageNrEntries;
+    cfg.ThreeTageNrEntries    = CVA6Cfg.ThreeTageNrEntries;
+    cfg.OneTageTagWidth       = CVA6Cfg.OneTageTagWidth; 
+    cfg.TwoTageTagWidth       = CVA6Cfg.TwoTageTagWidth; 
+    cfg.ThreeTageTagWidth     = CVA6Cfg.ThreeTageTagWidth; 
+    cfg.OneTageIndexWidth     = $clog2(CVA6Cfg.OneTageNrEntries   / cfg.INSTR_PER_FETCH);
+    cfg.TwoTageIndexWidth     = $clog2(CVA6Cfg.TwoTageNrEntries   / cfg.INSTR_PER_FETCH);
+    cfg.ThreeTageIndexWidth   = $clog2(CVA6Cfg.ThreeTageNrEntries / cfg.INSTR_PER_FETCH);  
+    
+    
+
 
     return cfg;
   endfunction

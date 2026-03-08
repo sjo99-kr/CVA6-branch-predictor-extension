@@ -21,6 +21,7 @@ package cva6_config_pkg;
   localparam config_pkg::cva6_user_cfg_t cva6_cfg = '{
       XLEN: unsigned'(CVA6ConfigXlen),
       VLEN: unsigned'(32),
+      GHRWIDTH: unsigned'(32),
       FpgaEn: bit'(0),
       FpgaAlteraEn: bit'(0),
       TechnoCut: bit'(1),
@@ -33,6 +34,31 @@ package cva6_config_pkg;
       AxiUserWidth: unsigned'(CVA6ConfigDataUserWidth),
       MemTidWidth: unsigned'(CVA6ConfigAxiIdWidth),
       NrLoadBufEntries: unsigned'(2),
+
+
+
+    // GSHARE PREDICTOR
+      GShareEn: bit'(1),
+      GSHAREWIDTH : unsigned'(0),
+      GshareNrEntires : unsigned'(8192),
+
+    // TAGE PARAMETER
+      TageEn: bit'(0),
+      GHRWIDTH : unsigned'(32),
+      TageTableWidth : unsigned'(4),
+      BaseTageNrEntries : unsigned'(64),    
+      OneTageNrEntries : unsigned'(256),   
+      TwoTageNrEntries : unsigned'(512),   
+      ThreeTageNrEntries : unsigned'(1024), 
+      OneTageTagWidth : unsigned'(4),
+      TwoTageTagWidth : unsigned'(6),
+      ThreeTageTagWidth : unsigned'(8),
+      BranchTidWidth : unsigned'(16), 
+      OneTageIndexWidth : unsigned'(0),
+      TwoTageIndexWidth : unsigned'(0),
+      ThreeTageIndexWidth : unsigned'(0),
+      
+  
       RVF: bit'(0),
       RVD: bit'(0),
       XF16: bit'(0),

@@ -53,6 +53,8 @@ module branch_unit #(
   logic [CVA6Cfg.VLEN-1:0] target_address;
   logic [CVA6Cfg.VLEN-1:0] next_pc;
 
+
+
   // here we handle the various possibilities of mis-predicts
   always_comb begin : mispredict_handler
     // set the jump base, for JALR we need to look at the register, for all other control flow instructions we can take the current PC
@@ -66,6 +68,16 @@ module branch_unit #(
     resolved_branch_o.valid = branch_valid_i;
     resolved_branch_o.is_mispredict = 1'b0;
     resolved_branch_o.cf_type = branch_predict_i.cf;
+    // TAGE PREDICTOR
+    resolved_branch_o.ghr_resolve = '0; 
+    resolved_branch_o.ghr_value   = '0; 
+    resolved_branch_o.bid         = '0;
+    resolved_branch_o.vpc_tage    = branch_predict_i.vpc_tage_value; // Deprecated
+    resolved_branch_o.btag        = '0; // Deprecated
+    // GSHARE PREDICTOR
+    resolved_branch_o.gshare_resolve = '0;
+    resolved_branch_o.gshare_index = '0;
+
     // calculate next PC, depending on whether the instruction is compressed or not this may be different
     // TODO(zarubaf): We already calculate this a couple of times, maybe re-use?
     next_pc                          = pc_i + ((is_compressed_instr_i) ? {{CVA6Cfg.VLEN-2{1'b0}}, 2'h2} : {{CVA6Cfg.VLEN-3{1'b0}}, 3'h4});
@@ -80,6 +92,8 @@ module branch_unit #(
     // 1. Branches
     // 2. Jumps to register addresses
     // 3. Zcmt instructions
+
+
     if (branch_valid_i) begin
       // write target address which goes to PC Gen or select target address if zcmt
       resolved_branch_o.target_address = (branch_comp_res_i) ? target_address : next_pc;
@@ -87,7 +101,8 @@ module branch_unit #(
       if (CVA6Cfg.RVZCMT) begin
         if (is_zcmt_i) begin
           // Unconditional jump handling
-          resolved_branch_o.is_mispredict = 1'b1;  // miss prediction for ZCMT 
+          resolved_branch_o.is_mispredict = 1'b1;  // miss prediction for ZCMT
+
           resolved_branch_o.cf_type = ariane_pkg::JumpR;
         end
       end
@@ -96,7 +111,16 @@ module branch_unit #(
         // Set the `cf_type` of the output as `branch`, this will update the BHT.
         resolved_branch_o.cf_type = ariane_pkg::Branch;
         // If the ALU comparison does not agree with the BHT prediction set the resolution as mispredicted.
-        resolved_branch_o.is_mispredict  = branch_comp_res_i != (branch_predict_i.cf == ariane_pkg::Branch);
+        resolved_branch_o.is_mispredict  = (branch_comp_res_i != (branch_predict_i.cf == ariane_pkg::Branch));
+        // TAGE PREDICTOR
+        resolved_branch_o.ghr_resolve   = branch_predict_i.predict_GHR;   
+        resolved_branch_o.ghr_value     = branch_comp_res_i;
+        resolved_branch_o.bid           = branch_predict_i.branch_id;
+        resolved_branch_o.vpc_tage      = branch_predict_i.vpc_tage_value;
+        resolved_branch_o.btag          = branch_predict_i.branch_tag;
+        // GSHARE PREDICTOR
+        resolved_branch_o.gshare_resolve = branch_predict_i.predict_GSHARE;
+        resolved_branch_o.gshare_index   = branch_predict_i.gshare_index;
       end
       if (fu_data_i.operation == ariane_pkg::JALR
           // check if the address of the jump register is correct and that we actually predicted

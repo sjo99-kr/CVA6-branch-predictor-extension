@@ -59,6 +59,18 @@ module instr_queue
     input logic [CVA6Cfg.INSTR_PER_FETCH-1:0][31:0] instr_i,
     // Instruction address - instr_realign
     input logic [CVA6Cfg.INSTR_PER_FETCH-1:0][CVA6Cfg.VLEN-1:0] addr_i,
+
+    // Speculative global history register Value per Instruction for TAGE. 
+    input logic [CVA6Cfg.INSTR_PER_FETCH-1:0][CVA6Cfg.GHRWIDTH-1:0] GHRStatus_i,
+    // Speculative global history register Value per Instruction for GSHARE.  
+    input logic [CVA6Cfg.INSTR_PER_FETCH-1:0][CVA6Cfg.GSHAREWIDTH-1:0] GShareStatus_i,
+    // GShare Table Resolve (for update) Index value per Instruction for GSHARE. 
+    input logic [CVA6Cfg.INSTR_PER_FETCH-1:0][$clog2(CVA6Cfg.GshareNrEntires / CVA6Cfg.INSTR_PER_FETCH)-1:0] GShareUpdateIndex_i,
+
+    // Branch ID for utilizing checkpoint queue in TAGE predictor
+    input logic [CVA6Cfg.INSTR_PER_FETCH-1:0][$clog2(CVA6Cfg.BranchTidWidth)-1:0] branchId_i,
+    input logic [CVA6Cfg.INSTR_PER_FETCH-1:0][CVA6Cfg.VLEN-1:0] vpc_tage_shifted_i, // Deprecated
+
     // Instruction is valid - instr_realign
     input logic [CVA6Cfg.INSTR_PER_FETCH-1:0] valid_i,
     // Handshake’s ready with CACHE - CACHE
@@ -99,6 +111,14 @@ module instr_queue
     logic [CVA6Cfg.GPLEN-1:0]        ex_gpaddr;  // lower GPLEN bits of tval2 for exception
     logic [31:0]                     ex_tinst;   // tinst of exception
     logic                            ex_gva;
+
+    // Branch ID for checkpoint queue
+    logic [$clog2(CVA6Cfg.BranchTidWidth)-1:0] bid; // Branch ID cnt
+    logic [CVA6Cfg.VLEN -1:0] vpc_tage;             // deprecated
+    logic [CVA6Cfg.GHRWIDTH-1:0] GHRStatus_instr;   // global history register for TAGE
+    logic [CVA6Cfg.INSTR_PER_FETCH-1:0] btag;       // deprecated
+    logic [$clog2(CVA6Cfg.GshareNrEntires / CVA6Cfg.INSTR_PER_FETCH)-1:0] GShare_index; // GShare Table Update Index
+    logic [CVA6Cfg.GSHAREWIDTH-1:0] GShare_instr;   // global history register for GSHARE
   } instr_data_t;
 
   logic [CVA6Cfg.LOG2_INSTR_PER_FETCH-1:0] branch_index;
@@ -142,6 +162,16 @@ module instr_queue
   logic [CVA6Cfg.INSTR_PER_FETCH*2-1:0] fifo_pos_extended;
   logic [CVA6Cfg.INSTR_PER_FETCH-1:0] fifo_pos;
   logic [CVA6Cfg.INSTR_PER_FETCH*2-1:0][31:0] instr;
+
+  // TAGE PREDICTOR
+  logic [CVA6Cfg.INSTR_PER_FETCH*2-1:0][$clog2(CVA6Cfg.BranchTidWidth)-1:0] branchId;
+  logic [CVA6Cfg.INSTR_PER_FETCH*2-1:0][CVA6Cfg.VLEN -1:0] vpcTage;
+  logic [CVA6Cfg.INSTR_PER_FETCH*2-1:0][CVA6Cfg.GHRWIDTH-1:0] ghrstatus;
+
+  // GSHARE PREDICTOR
+  logic [CVA6Cfg.INSTR_PER_FETCH*2-1:0][CVA6Cfg.GSHAREWIDTH-1:0] gsharestatus;
+  logic [CVA6Cfg.INSTR_PER_FETCH*2-1:0][$clog2(CVA6Cfg.GshareNrEntires / CVA6Cfg.INSTR_PER_FETCH)-1:0] gshareindex;
+
   ariane_pkg::cf_t [CVA6Cfg.INSTR_PER_FETCH*2-1:0] cf;
   // replay interface
   logic [CVA6Cfg.INSTR_PER_FETCH-1:0] instr_overflow_fifo;
@@ -205,6 +235,19 @@ module instr_queue
     // duplicate the entries for easier selection e.g.: 3 2 1 0 3 2 1 0
     for (genvar i = 0; i < CVA6Cfg.INSTR_PER_FETCH; i++) begin : gen_duplicate_instr_input
       assign instr[i] = instr_i[i];
+      // TAGE PREDICTOR
+      assign branchId[i] = branchId_i[i];
+      assign branchId[i+CVA6Cfg.INSTR_PER_FETCH] = branchId_i[i];
+      assign vpcTage[i] = vpc_tage_shifted_i[i];
+      assign vpcTage[i+CVA6Cfg.INSTR_PER_FETCH]  = vpc_tage_shifted_i[i];
+      assign ghrstatus[i] = GHRStatus_i[i];
+      assign ghrstatus[i+CVA6Cfg.INSTR_PER_FETCH] = GHRStatus_i[i];
+      // GSHARE PREDICTOR
+      assign gsharestatus[i] = GShareStatus_i[i];
+      assign gsharestatus[i+CVA6Cfg.INSTR_PER_FETCH] = GShareStatus_i[i];
+      assign gshareindex[i]  = GShareUpdateIndex_i[i];
+      assign gshareindex[i+CVA6Cfg.INSTR_PER_FETCH] = GShareUpdateIndex_i[i];
+
       assign instr[i+CVA6Cfg.INSTR_PER_FETCH] = instr_i[i];
       assign cf[i] = cf_type_i[i];
       assign cf[i+CVA6Cfg.INSTR_PER_FETCH] = cf_type_i[i];
@@ -217,6 +260,15 @@ module instr_queue
       assign instr_data_in[i].cf = cf[CVA6Cfg.INSTR_PER_FETCH+i-idx_is_q];
       assign instr_data_in[i].ex = exception_i;  // exceptions hold for the whole fetch packet
       assign instr_data_in[i].ex_vaddr = exception_addr_i;
+      // TAGE PREDICTOR
+      assign instr_data_in[i].bid = branchId[CVA6Cfg.INSTR_PER_FETCH+i-idx_is_q];
+      assign instr_data_in[i].vpc_tage = vpcTage[CVA6Cfg.INSTR_PER_FETCH+i-idx_is_q];
+      assign instr_data_in[i].GHRStatus_instr = ghrstatus[CVA6Cfg.INSTR_PER_FETCH+i-idx_is_q];
+      assign instr_data_in[i].btag = i; // deprecated
+      // GSHARE PREDICTOR
+      assign instr_data_in[i].GShare_instr    = gsharestatus[CVA6Cfg.INSTR_PER_FETCH+i-idx_is_q];
+      assign instr_data_in[i].GShare_index    = gshareindex[CVA6Cfg.INSTR_PER_FETCH+i-idx_is_q];
+    
       if (CVA6Cfg.RVH) begin : gen_hyp_ex_with_C
         assign instr_data_in[i].ex_gpaddr = exception_gpaddr_i;
         assign instr_data_in[i].ex_tinst = exception_tinst_i;
@@ -241,6 +293,7 @@ module instr_queue
     assign popcount = '0;
     assign shamt = '0;
     assign valid = '0;
+    assign branchId = '0;
 
 
     assign consumed_o = push_instr_fifo[0];
@@ -340,13 +393,28 @@ module instr_queue
         if (idx_ds[0][i]) begin
           if (instr_data_out[i].ex == ariane_pkg::FE_INSTR_ACCESS_FAULT) begin
             fetch_entry_o[0].ex.cause = riscv::INSTR_ACCESS_FAULT;
-          end else if (CVA6Cfg.RVH && instr_data_out[i].ex == ariane_pkg::FE_INSTR_GUEST_PAGE_FAULT) begin
+          end 
+          else if (CVA6Cfg.RVH && instr_data_out[i].ex == ariane_pkg::FE_INSTR_GUEST_PAGE_FAULT) begin
             fetch_entry_o[0].ex.cause = riscv::INSTR_GUEST_PAGE_FAULT;
           end else begin
             fetch_entry_o[0].ex.cause = riscv::INSTR_PAGE_FAULT;
           end
+
           fetch_entry_o[0].instruction = instr_data_out[i].instr;
+
+          // TAGE PREDICTOR
+          fetch_entry_o[0].branch_predict.branch_id = instr_data_out[i].bid;
+          fetch_entry_o[0].branch_predict.vpc_tage_value = instr_data_out[i].vpc_tage;
+          fetch_entry_o[0].branch_predict.predict_GHR = instr_data_out[i].GHRStatus_instr;
+          fetch_entry_o[0].branch_predict.branch_tag = instr_data_out[i].btag;
+          // GSHARE PREDICTOR
+          fetch_entry_o[0].branch_predict.predict_GSHARE = instr_data_out[i].GShare_instr;
+          fetch_entry_o[0].branch_predict.gshare_index = instr_data_out[i].GShare_index;
+          
           fetch_entry_o[0].ex.valid = instr_data_out[i].ex != ariane_pkg::FE_NONE;
+
+
+
           if (CVA6Cfg.TvalEn)
             fetch_entry_o[0].ex.tval = {
               {(CVA6Cfg.XLEN - CVA6Cfg.VLEN) {1'b0}}, instr_data_out[i].ex_vaddr
@@ -479,6 +547,10 @@ module instr_queue
         .pop_i     (pop_instr[i])
     );
   end
+
+
+
+
   // or reduce and check whether we are retiring a taken branch (might be that the corresponding)
   // fifo is full.
   always_comb begin
@@ -507,6 +579,8 @@ module instr_queue
       .data_o    (address_out),
       .pop_i     (pop_address)
   );
+
+
 
   unread i_unread_branch_mask (.d_i(|branch_mask_extended));
   unread i_unread_fifo_pos (.d_i(|fifo_pos_extended));  // we don't care about the lower signals

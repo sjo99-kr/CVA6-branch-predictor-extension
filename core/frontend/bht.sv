@@ -42,71 +42,78 @@ module bht #(
     output ariane_pkg::bht_prediction_t [CVA6Cfg.INSTR_PER_FETCH-1:0] bht_prediction_o
 );
   // the last bit is always zero, we don't need it for indexing
-  localparam OFFSET = CVA6Cfg.RVC == 1'b1 ? 1 : 2;
+  localparam OFFSET = CVA6Cfg.RVC == 1'b1 ? 1 : 2;                                      
   // re-shape the branch history table
-  localparam NR_ROWS = NR_ENTRIES / CVA6Cfg.INSTR_PER_FETCH;
+  localparam NR_ROWS = NR_ENTRIES / CVA6Cfg.INSTR_PER_FETCH;                            
   // number of bits needed to index the row
-  localparam ROW_ADDR_BITS = $clog2(CVA6Cfg.INSTR_PER_FETCH);
-  localparam ROW_INDEX_BITS = CVA6Cfg.RVC == 1'b1 ? $clog2(CVA6Cfg.INSTR_PER_FETCH) : 1;
+  localparam ROW_ADDR_BITS = $clog2(CVA6Cfg.INSTR_PER_FETCH);                           
+  localparam ROW_INDEX_BITS = CVA6Cfg.RVC == 1'b1 ? $clog2(CVA6Cfg.INSTR_PER_FETCH) : 1; 
   // number of bits we should use for prediction
-  localparam PREDICTION_BITS = $clog2(NR_ROWS) + OFFSET + ROW_ADDR_BITS;
+  localparam PREDICTION_BITS = $clog2(NR_ROWS) + OFFSET + ROW_ADDR_BITS;             
 
   struct packed {
     logic       valid;
     logic [1:0] saturation_counter;
   }
-      bht_d[NR_ROWS-1:0][CVA6Cfg.INSTR_PER_FETCH-1:0],
-      bht_q[NR_ROWS-1:0][CVA6Cfg.INSTR_PER_FETCH-1:0];
+      bht_d[NR_ROWS-1:0][CVA6Cfg.INSTR_PER_FETCH-1:0], // BTH[16][2]
+      bht_q[NR_ROWS-1:0][CVA6Cfg.INSTR_PER_FETCH-1:0]; //
 
   logic [$clog2(NR_ROWS)-1:0] index, update_pc;
   logic [ROW_INDEX_BITS-1:0] update_row_index, update_row_index_q, check_update_row_index;
 
-  assign index     = vpc_i[PREDICTION_BITS-1:ROW_ADDR_BITS+OFFSET];
-  assign update_pc = bht_update_i.pc[PREDICTION_BITS-1:ROW_ADDR_BITS+OFFSET];
+  assign index     = vpc_i[PREDICTION_BITS-1:ROW_ADDR_BITS+OFFSET];          
+  assign update_pc = bht_update_i.pc[PREDICTION_BITS-1:ROW_ADDR_BITS+OFFSET]; 
   if (CVA6Cfg.RVC) begin : gen_update_row_index
-    assign update_row_index = bht_update_i.pc[ROW_ADDR_BITS+OFFSET-1:OFFSET];
+    assign update_row_index = bht_update_i.pc[ROW_ADDR_BITS+OFFSET-1:OFFSET]; 
   end else begin
-    assign update_row_index = '0;
+    assign update_row_index = '0;                                          
   end
 
-  if (!CVA6Cfg.FpgaEn) begin : gen_asic_bht  // ASIC TARGET
+  if (!CVA6Cfg.FpgaEn) begin : gen_asic_bht  
 
-    logic [1:0] saturation_counter;
+    logic [1:0] saturation_counter; // 2-bit saturation counter
     // prediction assignment
     for (genvar i = 0; i < CVA6Cfg.INSTR_PER_FETCH; i++) begin : gen_bht_output
       assign bht_prediction_o[i].valid = bht_q[index][i].valid;
       assign bht_prediction_o[i].taken = bht_q[index][i].saturation_counter[1] == 1'b1;
+      
     end
 
     always_comb begin : update_bht
       bht_d = bht_q;
       saturation_counter = bht_q[update_pc][update_row_index].saturation_counter;
 
+
       if ((bht_update_i.valid && CVA6Cfg.DebugEn && !debug_mode_i) || (bht_update_i.valid && !CVA6Cfg.DebugEn)) begin
         bht_d[update_pc][update_row_index].valid = 1'b1;
+        
+
 
         if (saturation_counter == 2'b11) begin
           // we can safely decrease it
           if (!bht_update_i.taken)
             bht_d[update_pc][update_row_index].saturation_counter = saturation_counter - 1;
+
           // then check if it saturated in the negative regime e.g.: branch not taken
         end else if (saturation_counter == 2'b00) begin
           // we can safely increase it
           if (bht_update_i.taken)
             bht_d[update_pc][update_row_index].saturation_counter = saturation_counter + 1;
+
         end else begin  // otherwise we are not in any boundaries and can decrease or increase it
           if (bht_update_i.taken)
             bht_d[update_pc][update_row_index].saturation_counter = saturation_counter + 1;
           else bht_d[update_pc][update_row_index].saturation_counter = saturation_counter - 1;
+
         end
       end
-    end
+    end : update_bht
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin
+    always_ff @(posedge clk_i or negedge rst_ni) begin : bht_q_Update
       if (!rst_ni) begin
         for (int unsigned i = 0; i < NR_ROWS; i++) begin
           for (int j = 0; j < CVA6Cfg.INSTR_PER_FETCH; j++) begin
-            bht_q[i][j] <= '0;
+            bht_q[i][j] = '0;
           end
         end
       end else begin
@@ -120,9 +127,10 @@ module bht #(
           end
         end else begin
           bht_q <= bht_d;
+
         end
       end
-    end
+    end : bht_q_Update
 
   end else begin : gen_fpga_bht  //FPGA TARGETS
 

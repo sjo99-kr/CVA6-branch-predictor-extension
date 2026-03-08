@@ -21,6 +21,7 @@ package cva6_config_pkg;
   localparam config_pkg::cva6_user_cfg_t cva6_cfg = '{
       XLEN: unsigned'(CVA6ConfigXlen),
       VLEN: unsigned'(32),
+      
       FpgaEn: bit'(0),
       FpgaAlteraEn: bit'(0),
       TechnoCut: bit'(1),
@@ -32,6 +33,29 @@ package cva6_config_pkg;
       AxiIdWidth: unsigned'(CVA6ConfigAxiIdWidth),
       AxiUserWidth: unsigned'(CVA6ConfigDataUserWidth),
       MemTidWidth: unsigned'(CVA6ConfigAxiIdWidth),
+
+    // GSHARE PREDICTOR
+      GShareEn: bit'(0),
+      GSHAREWIDTH : unsigned'(0),
+      GshareNrEntires : unsigned'(8192),
+
+    // TAGE PARAMETER
+      TageEn: bit'(1),
+      GHRWIDTH : unsigned'(32),
+      TageTableWidth : unsigned'(4),
+      BaseTageNrEntries : unsigned'(64),    
+      OneTageNrEntries : unsigned'(256),   
+      TwoTageNrEntries : unsigned'(512),   
+      ThreeTageNrEntries : unsigned'(1024), 
+      OneTageTagWidth : unsigned'(4),
+      TwoTageTagWidth : unsigned'(6),
+      ThreeTageTagWidth : unsigned'(8),
+      BranchTidWidth : unsigned'(16), 
+      OneTageIndexWidth : unsigned'(0),
+      TwoTageIndexWidth : unsigned'(0),
+      ThreeTageIndexWidth : unsigned'(0),
+
+
       NrLoadBufEntries: unsigned'(2),
       RVF: bit'(0),
       RVD: bit'(0),
@@ -64,8 +88,12 @@ package cva6_config_pkg;
       ExceptionAddress: 64'h808,
       RASDepth: unsigned'(2),
       BTBEntries: unsigned'(0),
+
+
+
+
       BPType: config_pkg::BHT,
-      BHTEntries: unsigned'(32),
+      BHTEntries: unsigned'(8192),
       BHTHist: unsigned'(3),
       DmBaseAddress: 64'h0,
       TvalEn: bit'(0),

@@ -180,6 +180,9 @@ ${CVA6_REPO_DIR}/core/frontend/ras.sv
 ${CVA6_REPO_DIR}/core/frontend/instr_scan.sv
 ${CVA6_REPO_DIR}/core/frontend/instr_queue.sv
 ${CVA6_REPO_DIR}/core/frontend/frontend.sv
+${CVA6_REPO_DIR}/core/frontend/TageBaseTable.sv
+${CVA6_REPO_DIR}/core/frontend/TageTable.sv
+$(CVA6_REPO_DIR)/core/frontend/GShareTable.sv
 
 // Cache subsystem
 ${CVA6_REPO_DIR}/core/cache_subsystem/wt_dcache_ctrl.sv

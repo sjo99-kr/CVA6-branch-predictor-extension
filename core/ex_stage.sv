@@ -294,6 +294,8 @@ module ex_stage
   logic [CVA6Cfg.NrIssuePorts-1:0] one_cycle_select;
   assign one_cycle_select = alu_valid_i | branch_valid_i | csr_valid_i | aes_valid_i;
 
+
+
   fu_data_t one_cycle_data;
   logic [CVA6Cfg.VLEN-1:0] rs1_forwarding;
   logic [CVA6Cfg.VLEN-1:0] rs2_forwarding;

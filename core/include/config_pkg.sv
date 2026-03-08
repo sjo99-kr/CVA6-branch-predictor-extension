@@ -64,6 +64,7 @@ package config_pkg;
     int unsigned                 XLEN;
     // Virtual address Size (in bits)
     int unsigned                 VLEN;
+    
     // Atomic RISC-V extension
     bit                          RVA;
     // Bit manipulation RISC-V extension
@@ -174,6 +175,8 @@ package config_pkg;
     int unsigned                 AxiUserWidth;
     // AXI burst in write
     bit                          AxiBurstWriteEn;
+
+
     // TODO
     int unsigned                 MemTidWidth;
     // Instruction cache size (in bytes)
@@ -247,6 +250,8 @@ package config_pkg;
     int unsigned RASDepth;
     // Branch target buffer entries
     int unsigned BTBEntries;
+
+
     // Branch predictor type
     bp_type_t    BPType;
     // Branch history entries
@@ -263,6 +268,30 @@ package config_pkg;
     int unsigned SharedTlbDepth;
     // Option to enable Svnapot extension
     bit          SvnapotEn;
+
+    
+
+    // GSHARE PREDICTOR
+    bit                          GShareEn;
+    int unsigned                 GshareNrEntires;
+    int unsigned                 GSHAREWIDTH;
+
+    // TAGE PREDICTOR
+    bit                          TageEn;
+    int unsigned                 GHRWIDTH;
+    int unsigned                 TageTableWidth;
+    int unsigned                 BranchTidWidth;
+    int unsigned                 OneTageIndexWidth; 
+    int unsigned                 TwoTageIndexWidth;
+    int unsigned                 ThreeTageIndexWidth;    
+    int unsigned                 OneTageNrEntries;
+    int unsigned                 TwoTageNrEntries;
+    int unsigned                 ThreeTageNrEntries;
+    int unsigned                 BaseTageNrEntries;
+    int unsigned                 OneTageTagWidth;
+    int unsigned                 TwoTageTagWidth;
+    int unsigned                 ThreeTageTagWidth;
+
   } cva6_user_cfg_t;
 
   typedef struct packed {
@@ -270,6 +299,7 @@ package config_pkg;
     int unsigned VLEN;
     int unsigned PLEN;
     int unsigned GPLEN;
+
     bit IS_XLEN32;
     bit IS_XLEN64;
     int unsigned XLEN_ALIGN_BYTES;
@@ -342,6 +372,8 @@ package config_pkg;
     logic [63:0] ExceptionAddress;
     int unsigned RASDepth;
     int unsigned BTBEntries;
+
+
     bp_type_t    BPType;
     int unsigned BHTEntries;
     int unsigned BHTHist;
@@ -434,6 +466,28 @@ package config_pkg;
     int unsigned X_DUALREAD;
     int unsigned X_DUALWRITE;
     int unsigned X_ISSUE_REGISTER_SPLIT;
+
+    // GSHARE PREDICTOR
+    bit                          GShareEn;
+    int unsigned                 GshareNrEntires;
+    int unsigned                 GSHAREWIDTH;
+
+    // TAGE PREDICTOR
+    bit                          TageEn;
+    int unsigned                 GHRWIDTH;
+    int unsigned                 TageTableWidth;
+    int unsigned                 BranchTidWidth;
+    int unsigned                 OneTageIndexWidth; 
+    int unsigned                 TwoTageIndexWidth;
+    int unsigned                 ThreeTageIndexWidth;
+    int unsigned                 OneTageNrEntries;
+    int unsigned                 TwoTageNrEntries;
+    int unsigned                 ThreeTageNrEntries;
+    int unsigned                 BaseTageNrEntries;
+    int unsigned                 OneTageTagWidth;
+    int unsigned                 TwoTageTagWidth;
+    int unsigned                 ThreeTageTagWidth;
+
 
   } cva6_cfg_t;
 

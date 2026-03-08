@@ -1187,6 +1187,7 @@ def main():
             run_test(full_path, args.iss_yaml, args.isa, args.target, args.mabi, args.gcc_opts,
                   args.iss, output_dir, args.core_setting_dir, args.debug, args.linker,
                   args.priv, args.spike_params, iss_timeout=args.iss_timeout)
+
           else:
             logging.error('%s does not exist or is not a file' % full_path)
             sys.exit(RET_FAIL)

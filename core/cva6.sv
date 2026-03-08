@@ -37,6 +37,16 @@ module cva6
     localparam type branchpredict_sbe_t = struct packed {
       cf_t                     cf;               // type of control flow prediction
       logic [CVA6Cfg.VLEN-1:0] predict_address;  // target address at which to jump, or not
+
+      // TAGE PREDICTOR
+      logic [CVA6Cfg.VLEN-1:0] vpc_tage_value;                // PC value of Instr., same to addr of Instr.
+      logic [CVA6Cfg.GHRWIDTH-1:0] predict_GHR;               // Global History Register Rollback Value for TAGE
+      logic [$clog2(CVA6Cfg.BranchTidWidth)-1:0] branch_id;   // Branch ID for Branch Instr.
+      logic [CVA6Cfg.INSTR_PER_FETCH-1:0] branch_tag;         // deprecated
+
+      // GSHARE PREDICTOR
+      logic [CVA6Cfg.GSHAREWIDTH-1:0] predict_GSHARE;         // Global History Register Rollback Value for GSHARE
+      logic [$clog2(CVA6Cfg.GshareNrEntires / CVA6Cfg.INSTR_PER_FETCH)-1:0] gshare_index; // Index value for updating GShare table
     },
 
     parameter type exception_t = struct packed {
@@ -138,6 +148,18 @@ module cva6
       logic                    is_mispredict;   // set if this was a mis-predict
       logic                    is_taken;        // branch is taken
       cf_t                     cf_type;         // Type of control flow change
+
+      // TAGE PREDICTION 
+      logic [CVA6Cfg.GHRWIDTH-1:0]    ghr_resolve;                                          // Global History Register Rollback for TAGE
+      logic                           ghr_value;                                            // Taken or Not Taken Value, same to is_taken.
+      logic [$clog2(CVA6Cfg.BranchTidWidth)-1:0] bid;                                       // branch ID for indexing checkpoint queue
+      logic [CVA6Cfg.INSTR_PER_FETCH-1:0] btag;        
+      logic [CVA6Cfg.VLEN  - 1:0] vpc_tage;                                                 // PC value of instr. , same to addr of instr.
+
+      // GSHARE PREDICTION
+      logic [CVA6Cfg.GSHAREWIDTH-1:0] gshare_resolve;                                       // Global History Register Rollbak for GShare
+      logic [$clog2(CVA6Cfg.GshareNrEntires / CVA6Cfg.INSTR_PER_FETCH)-1:0] gshare_index;   // GShare Index for updating GShare Table.
+
     },
 
     // All information needed to determine whether we need to associate an interrupt
@@ -775,6 +797,8 @@ module cva6
       .dcache_req_ports_o  (dcache_req_ports_id_cache)
   );
 
+
+
   logic [CVA6Cfg.NrWbPorts-1:0][CVA6Cfg.TRANS_ID_BITS-1:0] trans_id_ex_id;
   logic [CVA6Cfg.NrWbPorts-1:0][CVA6Cfg.XLEN-1:0] wbdata_ex_id;
   exception_t [CVA6Cfg.NrWbPorts-1:0] ex_ex_ex_id;  // exception from execute, ex_stage to id_stage
@@ -1155,6 +1179,14 @@ module cva6
   );
 
   assign commit_ack = commit_macro_ack & ~commit_drop_id_commit;
+
+  integer num_instr = 0;
+  always_ff @(posedge clk_i) begin
+    if(commit_ack) begin
+        num_instr = num_instr + 1;
+        $display("num of instr : %d", num_instr);
+    end
+  end
 
   // ---------
   // CSR

@@ -177,10 +177,24 @@ package ariane_pkg;
     Return   // Return Address Prediction
   } cf_t;
 
+
   typedef struct packed {
     logic valid;
     logic taken;
   } bht_prediction_t;
+
+  // Per-table prediction in TAGE
+  typedef struct packed {
+    logic valid;
+    logic taken;
+    logic confidence;
+  } tage_table_prediction_t;
+
+  // Final prediction in Tage
+  typedef struct packed {
+    logic valid;
+    logic taken;
+  } tage_prediction_t;
 
   typedef struct packed {
     logic       valid;

@@ -682,10 +682,17 @@ verilate_command := $(verilator) --no-timing verilator_config.vlt               
                     -Wno-fatal                                                                                   \
                     -Wno-PINCONNECTEMPTY                                                                         \
                     -Wno-ASSIGNDLY                                                                               \
+					-Wno-WIDTHTRUNC																			     \
+					-Wno-SELRANGE																			     \
+					-Wno-MODDUP																				     \
+					-Wno-LITENDIAN																				 \
+					-Wno-WIDTHCONCAT																			 \
+					-Wno-UNSIGNED																				 \
+					-Wno-WIDTHEXPAND																			 \
+					-Wno-CASEINCOMPLETE																			 \
                     -Wno-DECLFILENAME                                                                            \
                     -Wno-UNUSED                                                                                  \
                     -Wno-UNOPTFLAT                                                                               \
-                    -Wno-BLKANDNBLK                                                                              \
                     -Wno-style                                                                                   \
                     $(if ($(PRELOAD)!=""), -DPRELOAD=1,)                                                         \
                     $(if $(PROFILE),--stats --stats-vars --profile-cfuncs,)                                      \

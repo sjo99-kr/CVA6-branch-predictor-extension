@@ -28,5 +28,6 @@ int main(int argc, char* arg[]) {
 	{
 		a += i;
 	}
+	
 	return 0;
 }
