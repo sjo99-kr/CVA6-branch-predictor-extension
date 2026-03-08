@@ -74,13 +74,35 @@ The TAGE predictor generates **table indices and tags** using a combination of t
 
 ---
 
-### 📦 Checkpoint Queue Entry
+### 🔮 Prediction Selection
+
+The final branch prediction is determined through a **two-stage selection process**.
+
+#### 1️⃣ Champion Detection
+
+The predictor first checks whether a **champion prediction** exists.  
+A champion indicates that the prediction confidence is sufficiently high.
+
+If a champion is detected, the prediction from that table can be selected as the **final prediction**, even if the table has **lower priority (shorter history length)**.
+
+
+#### 2️⃣ Table Priority Selection
+
+If no champion prediction exists, the predictor selects the prediction from the **highest-priority table**.
+
+Since TAGE tables are organized by **increasing history length**, tables with **longer history** have higher priority.
+
+Therefore, the final prediction is taken from the **highest-level table with a valid prediction**.
+
+---
+
+## 📦 Checkpoint Queue 
 <img width="1212" height="614" alt="image" src="https://github.com/user-attachments/assets/b98e6da8-6c6d-4740-9297-1535eecb6a47" />
 
 The **Checkpoint Queue** is implemented as a **circular queue**, indexed by the **Branch Instruction ID (Branch ID)**.  
 Each entry stores the necessary information required to **update the TAGE tables when a speculative branch is resolved**.
 
-### Entry Components
+### Checkpoint Queue Entry Components
 
 #### TAGE Table Information (Table 1–3)
 
@@ -102,22 +124,3 @@ Each checkpoint entry stores the following information for every tagged TAGE tab
 
 ---
 
-### 🔮 Prediction Selection
-
-The final branch prediction is determined through a **two-stage selection process**.
-
-#### 1️⃣ Champion Detection
-
-The predictor first checks whether a **champion prediction** exists.  
-A champion indicates that the prediction confidence is sufficiently high.
-
-If a champion is detected, the prediction from that table can be selected as the **final prediction**, even if the table has **lower priority (shorter history length)**.
-
-
-#### 2️⃣ Table Priority Selection
-
-If no champion prediction exists, the predictor selects the prediction from the **highest-priority table**.
-
-Since TAGE tables are organized by **increasing history length**, tables with **longer history** have higher priority.
-
-Therefore, the final prediction is taken from the **highest-level table with a valid prediction**.
