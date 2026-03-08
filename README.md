@@ -120,7 +120,7 @@ The effectiveness of TAGE can vary depending on the hashing scheme and the numbe
 
 ### Branch Miss Rate
 
-<img width="755" height="305" alt="image" src="https://github.com/user-attachments/assets/f659741e-0df1-46b1-8f09-fdb1b6355b1f" />
+<img width="1266" height="518" alt="image" src="https://github.com/user-attachments/assets/c6102838-5a17-4ee3-90b9-823a10c411d2" />
 
 The figure shows the branch miss rate across different predictors.
 
