@@ -127,3 +127,25 @@ The figure shows the branch miss rate across different predictors.
 GShare and TAGE significantly outperform the baseline BHT for structured branch patterns, demonstrating the benefits of history-based branch prediction mechanisms.
 
 The performance gap varies across applications due to differences in branch patterns and aliasing behavior within the predictor tables.
+
+---
+
+###  Hardware-Cost-Normalized MPKI
+
+### 💾 Hardware-Cost-Normalized MPKI
+
+To evaluate prediction efficiency relative to hardware overhead, we introduce a **hardware-cost-normalized MPKI** metric.
+
+\[
+Cost\text{-}Normalized\ MPKI =
+\frac{\text{Branch Misses}}{\text{Total Instructions}} \times 1000 \div \text{Hardware Cost (Bytes)}
+\]
+
+This metric highlights how effectively each predictor reduces branch mispredictions relative to its hardware footprint.
+
+| Branch Predictor | Aliasing | Alternating | Correlated Branch | Correlated Periodic | Binary Search | N-Queens | QuickSort |
+|-----------------|----------|-------------|------------------|--------------------|--------------|----------|-----------|
+| Baseline (BHT) | 15.93 | 14.14 | 11.41 | 10.60 | 5.79 | 3.43 | 0.58 |
+| GShare | 3.15 | 0.0028 | 0.0081 | 2.57 | 5.03 | 3.59 | 0.24 |
+| TAGE | 11.48 | 0.0032 | 0.00074 | 0.5106 | 6.35 | 4.37 | 0.41 |
+
