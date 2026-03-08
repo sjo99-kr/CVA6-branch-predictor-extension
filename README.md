@@ -108,7 +108,7 @@ Real workloads with control-flow intensive behavior.
 
 ### Normalized IPC
 
-<img width="753" height="280" alt="image" src="https://github.com/user-attachments/assets/464c6a1a-0e8e-45d4-9b0d-cad695d0d82b" />
+<img width="800" height="300" alt="image" src="https://github.com/user-attachments/assets/464c6a1a-0e8e-45d4-9b0d-cad695d0d82b" />
 
 The figure shows the normalized IPC improvement of different branch predictors across microbenchmarks and application benchmarks.
 
@@ -120,7 +120,7 @@ The effectiveness of TAGE can vary depending on the hashing scheme and the numbe
 
 ### Branch Miss Rate
 
-<img width="1266" height="518" alt="image" src="https://github.com/user-attachments/assets/c6102838-5a17-4ee3-90b9-823a10c411d2" />
+<img width="800" height="300" alt="image" src="https://github.com/user-attachments/assets/c6102838-5a17-4ee3-90b9-823a10c411d2" />
 
 The figure shows the branch miss rate across different predictors.
 
