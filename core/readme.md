@@ -50,7 +50,7 @@ The architecture implemented in this project consists of:
 
 - **Useful Bit (u-bit)**  
   Indicates whether the entry has been useful for correct predictions.  
-  If the useful bit is **0**, the entry becomes a candidate for **replacement or new allocation**.
+  If the useful bit is **0**, the entry becomes a candidate for **replacement**.
 
 
 ---
