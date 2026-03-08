@@ -144,3 +144,13 @@ This metric highlights the performance of branch predictors relative to its hard
 | GShare | 3.15 | 0.0028 | 0.0081 | 2.57 | 5.03 | 3.59 | 0.24 |
 | TAGE | 11.48 | 0.0032 | 0.00074 | 0.5106 | 6.35 | 4.37 | 0.41 |
 
+---
+
+### ▶️ How to Run Benchmarks
+
+To run the branch prediction benchmarks, execute the following commands:
+
+```bash
+export DV_SIMULATORS=veri-testharness
+cd verif/sim
+./TageBenchmarks.sh
