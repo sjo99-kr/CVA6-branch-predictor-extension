@@ -36,9 +36,7 @@ The architecture implemented in this project consists of:
 - **Valid Bit**  
   Indicates whether the entry contains a valid prediction.  
   If the entry is not valid, the predictor falls back to **static branch prediction**.
-
----
-
+  
 #### Table 1–3 (Tagged TAGE Tables)
 - **2-bit Saturating Counter**  
   Incremented when the branch is **taken** and decremented when the branch is **not taken**.
@@ -56,6 +54,27 @@ The architecture implemented in this project consists of:
 
 
 ---
+
+### 📦 Table Index and Tag Hashing Functions
+
+| Parameter | Description |
+|-----------|-------------|
+| `NR_ENTRY` | Number of entries in the predictor table |
+| `OFFSET` | Instruction alignment offset for PC indexing |
+| `TABLE_N_TAG_WIDTH` | Tag width for table *N* |
+| `Table_N_Folded_Index` | Folded global history used for index hashing |
+| `Table_N_Folded_Tag` | Folded global history used for tag generation |
+
+The TAGE predictor generates **table indices and tags** using a combination of the **program counter (PC)** and **folded global history**.
+
+For Table 1,2,3,
+  Table_Index = PC ⊕ FoldedHistory (Folded Index)
+  Table_Tag   = PC ⊕ FoldedHistory (Folded Tag)
+
+
+
+
+
 
 # 🔮 Prediction Stage (Fetch)
 
