@@ -1,141 +1,160 @@
 # CVA6 RISC-V CPU [![Build Status](https://github.com/openhwgroup/cva6/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/openhwgroup/cva6/actions/workflows/ci.yml) [![CVA6 dashboard](https://riscv-ci.pages.thales-invia.fr/dashboard/badge_master.svg)](https://riscv-ci.pages.thales-invia.fr/dashboard/dashboard_cva6.html) [![Documentation Status](https://readthedocs.com/projects/openhw-group-cva6-user-manual/badge/?version=latest)](https://docs.openhwgroup.org/projects/cva6-user-manual/?badge=latest) [![GitHub release](https://img.shields.io/github/release/openhwgroup/cva6?include_prereleases=&sort=semver&color=blue)](https://github.com/openhwgroup/cva6/releases/)
 
-CVA6 is a 6-stage, single-issue, in-order CPU which implements the 64-bit RISC-V instruction set. It fully implements I, M, A and C extensions as specified in Volume I: User-Level ISA V 2.3 as well as the draft privilege extension 1.10. It implements three privilege levels M, S, U to fully support a Unix-like operating system. Furthermore, it is compliant to the draft external debug spec 0.13.
+# 🚀 CVA6 Branch Predictor Extension (GShare & TAGE)
 
-It has a configurable size, separate TLBs, a hardware PTW and branch-prediction (branch target buffer and branch history table). The primary design goal was on reducing critical path length.
+This repository implements an enhanced Branch Prediction Unit for the CVA6 (formerly Ariane) open-source RISC-V core.
 
-The CVA6 core is part of a vivid ecosystem. In [this document](RESOURCES.md), we gather pointers to this ecosystem (building blocks, designs, partners...).
+The project extends the CVA6 frontend architecture by integrating high-performance **GShare** and **TAGE (Tagged Geometric History Length)** branch predictors.
 
-A performance model of CVA6 is available in the `perf-model/` folder of this repository.
-It can be used to investigate performance-related micro-architecture changes.
+The predictors are evaluated using both microbenchmarks and application benchmarks to analyze their impact on branch prediction accuracy and overall CPU performance.
 
-<img src="docs/03_cva6_design/_static/ariane_overview.drawio.png"/>
+The goal is to improve processor performance by increasing **IPC (Instructions Per Cycle)** and reducing **branch misprediction penalties**.
 
+## Overview
 
-# Quick setup
+This project extends the branch prediction unit of the CVA6 open-source RISC-V processor by implementing **GShare** and **TAGE** branch predictors.
 
-The following instructions will allow you to compile and run a Verilator model of the CVA6 APU (which instantiates the CVA6 core) within the CVA6 APU testbench (corev_apu/tb).
+The implementation focuses primarily on modifications to the **frontend stage** of the processor pipeline.
 
-Throughout all build and simulations scripts executions, you can use the environment variable `NUM_JOBS` to set the number of concurrent jobs launched by `make`:
-- if left undefined, `NUM_JOBS` will default to 1, resulting in a sequential execution
-of `make` jobs;
-- when setting `NUM_JOBS` to an explicit value, it is recommended not to exceed 2/3 of
-the total number of virtual cores available on your system.    
+For details about the original architecture, refer to the official CVA6 repository.
 
-1. Checkout the repository and initialize all submodules.
-```sh
-git clone https://github.com/openhwgroup/cva6.git
-cd cva6
-git submodule update --init --recursive
-```
+Original CVA6 repository:  
+https://github.com/openhwgroup/cva6
 
-2. Install the GCC Toolchain [build prerequisites](util/toolchain-builder/README.md#Prerequisites) then [the toolchain itself](util/toolchain-builder/README.md#Getting-started).
+---
 
-:warning: It is **strongly recommended** to use the toolchain built with the provided scripts.
+## Modified Components
 
-3. Install `cmake`, version 3.14 or higher.
+The branch predictor implementation required modifications to several frontend components:
+- `core/cva6.sv`
+- `core/branch_unit.sv`
+- `core/include/ariane_pkg.sv`
+- `core/include/build_config_pkg.sv`
+- `core/include/config_pkg.sv`
+- `core/frontend/frontend.sv`
+- `core/frontend/instr_queue.sv`
+- `core/frontend/GShareTable.sv`
+- `core/frontend/TageBaseTable.sv`
+- `core/frontend/TageTable.sv`
 
-4. Set the RISCV environment variable.
-```sh
-export RISCV=/path/to/toolchain/installation/directory
-```
+## Branch Predictor Configuration
 
-5. Install `help2man` and `device-tree-compiler` packages.
+Branch predictor parameters can be configured by modifying the following files:
 
-For Debian-based Linux distributions, run :
+- `core/include/cv32a60x_config_pkg.sv`
+- `core/include/cv32a65x_config_pkg.sv`
 
-```sh
-sudo apt-get install help2man device-tree-compiler
-```
+Currently, the implementation supports the **cv32a60x** and **cv32a65x** configurations.
 
-6. Install the riscv-dv requirements:
+Support for additional CVA6 configurations will be extended in future work.
 
-```sh
-pip3 install -r verif/sim/dv/requirements.txt
-```
+# Implemented Predictors
 
-7. Run these commands to install a custom Spike and Verilator (i.e. these versions must be used to simulate the CVA6) and [these](#running-regression-tests-simulations) tests suites.
-```sh
-# DV_SIMULATORS is detailed in the next section
-export DV_SIMULATORS=veri-testharness,spike
-bash verif/regress/smoke-tests.sh
-```
+## Baseline BHT 
+(Implemented in Original CVA6 core, https://github.com/openhwgroup/cva6)
+- 2-bit saturating counter predictor
+- Indexed using PC bits
+- Serves as the baseline predictor
 
+---
 
-# Tutorials
+## GShare Predictor
 
-* **[Running Simulations](tutorials/running_sim.md)**
-* **[ASIC Implementation](tutorials/asic.md)**
-* **[FPGA Implementation and running an OS](tutorials/fpga.md)**
-* **[Instruction Tracing](corev_apu/instr_tracing/README.md)**
+GShare uses global branch history to improve prediction accuracy.
 
-# Directory Structure
+Key features:
 
-The directory structure separates the [CVA6 RISC-V CPU](#cva6-risc-v-cpu) core from the [CORE-V-APU FPGA Emulation Platform](#corev-apu-fpga-emulation).
-Files, directories and submodules under `cva6` are for the core _only_ and should not have any dependencies on the APU.
-Files, directories and submodules under `corev_apu` are for the FPGA Emulation platform.
-The CVA6 core can be compiled stand-alone, and obviously the APU is dependent on the core.
+- Global History Register (GHR)
+- Index = PC XOR GHR
+- Reduces aliasing compared to simple BHT
 
-The top-level directories of this repo:
-* **ci**: Scriptware for CI.
-* **common**: Source code used by both the CVA6 Core and the COREV APU. Subdirectories from here are `local` for common files that are hosted in this repo and `submodules` that are hosted in other repos.
-* **core**: Source code for the CVA6 Core only. There should be no sources in this directory used to build anything other than the CVA6 core.
-* **corev_apu**: Source code for the CVA6 APU, exclusive of the CVA6 core. There should be no sources in this directory used to build the CVA6 core.
-* **docs**: Documentation.
-* **pd**: Example and CI scripts to synthesis CVA6.
-* **util**: General utility scriptware.
-* **vendor**: Third-party IP maintained outside the repository.
-* **verif**: Verification environment for the CVA6. The verification files shared with other cores are in the [core-v-verif](https://github.com/openhwgroup/core-v-verif) repository on GitHub. core-v-verif is defined as a cva6 submodule.
+---
 
+## TAGE Predictor
 
-## verif Directories
+TAGE (Tagged Geometric History Length) is a state-of-the-art branch predictor.
 
-- **bsp**:     board support package for test-programs compiled/assembled/linked for the CVA6.
-This BSP is used by both `core` testbench and `uvmt_cva6` UVM verification environment.
-- **regress**: scripts to install tools, test suites, CVA6 code and to execute tests
-- **sim**:     simulation environment (e.g. riscv-dv)
-- **tb**:      testbench module instancing the core
-- **tests**:   source of test cases and test lists
+Features:
 
+- Base predictor
+- Multiple tagged predictor tables
+- Different history lengths
+- Tag matching for accurate prediction
 
-# Contributing
+TAGE is able to capture **long branch correlations**, which improves prediction accuracy.
 
-We highly appreciate community contributions.
-To ease the work of reviewing contributions, please review [CONTRIBUTING](CONTRIBUTING.md).
+---
 
-Contributions to the documentation (`docs/` and `tutorials/` directories) are very welcome as well.
+# Benchmark Methodology
 
-If you find any problems or issues with CVA6 or the documentation, please check out the [issue tracker](https://github.com/openhwgroup/cva6/issues)
-and create a new issue if your problem is not yet tracked. \
-[The CVA6 Kanban Board](https://github.com/orgs/openhwgroup/project/3/view/7) loosely tracks planned improvements.
+Two types of benchmarks are used for evaluation.
 
+## Microbenchmarks
 
-# Publication
+Designed to stress specific branch patterns.
 
-If you use CVA6 in your academic work you can cite us:
+- **Aliasing**
+- **Alternating Pattern**
+- **Correlated Branch**
+- **Correlated Periodic**
+- **Periodic Pattern**
 
-<details>
-<summary>CVA6 Publication</summary>
+These tests highlight differences between branch predictors.
 
-```
-@article{zaruba2019cost,
-   author={F. {Zaruba} and L. {Benini}},
-   journal={IEEE Transactions on Very Large Scale Integration (VLSI) Systems},
-   title={The Cost of Application-Class Processing: Energy and Performance Analysis of a Linux-Ready 1.7-GHz 64-Bit RISC-V Core in 22-nm FDSOI Technology},
-   year={2019},
-   volume={27},
-   number={11},
-   pages={2629-2640},
-   doi={10.1109/TVLSI.2019.2926114},
-   ISSN={1557-9999},
-   month={Nov},
-}
-```
+---
 
-</details>
+## Application Benchmarks
 
-# Acknowledgements
+Real workloads with control-flow intensive behavior.
 
-Check out the [acknowledgements](ACKNOWLEDGEMENTS.md).
+- **Binary Search**
+- **N-Queens**
+- **QuickSort**
+
+These workloads show practical performance improvements.
+
+---
+
+# Evaluation Metrics
+
+Two metrics are used.
+
+## Branch Miss Rate
+
+Percentage of branch mispredictions.
+
+Lower miss rate indicates better prediction accuracy.
+
+---
+
+## IPC (Instructions Per Cycle)
+
+IPC measures overall processor performance.
+
+Branch mispredictions cause pipeline flushes, which reduce IPC.
+
+Improved prediction accuracy leads to higher IPC.
+
+---
+
+# Results
+
+## Normalized IPC
+
+![IPC Results](results/ipc_results.png)
+
+TAGE significantly improves performance for branch-heavy workloads such as **alternating and correlated patterns**.
+
+---
+
+## Branch Miss Rate
+
+![Miss Rate](results/miss_rate_results.png)
+
+TAGE achieves the lowest miss rate due to its ability to capture long branch history patterns.
+
+---
+
+# Repository Structure
 
 
