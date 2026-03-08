@@ -16,6 +16,8 @@ This project extends the branch prediction unit of the **CVA6 open-source RISC-V
 
 The implementation focuses primarily on modifications to the **frontend stage of the processor pipeline**.
 
+**For detailed architectural specifications of the TAGE branch predictor, refer to the README.md in the core directory.**
+
 For details about the original architecture, refer to the official CVA6 repository.
 
 Original CVA6 repository:  
@@ -62,8 +64,6 @@ Support for additional CVA6 configurations will be extended in future work.
 | Baseline (BHT) | 1 | 8192 | 2-bit counter + 1-bit valid | 3,072 B |
 | GShare | 1 | 8192 | 2-bit counter + 1-bit valid | 3,072 B |
 | TAGE | 4 | 64 / 256 / 512 / 1024 | 2-bit counter/useful + 1-bit valid + tag (0/4/6/8 bit) | 2,696 B |
-
-**For detailed architectural specifications of the TAGE branch predictor, refer to the README.md in the core directory.**
 
 ---
 
